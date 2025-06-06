@@ -8,6 +8,7 @@ class DocumentMetadataBase(BaseModel):
 
 class DocumentMetadataResponse(DocumentMetadataBase):
     id: int # From the database model
+    doc_id: str
     status: ProcessingStatus
     uploaded_at: datetime
     processed_at: Optional[datetime] = None
