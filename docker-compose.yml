@@ -1,0 +1,18 @@
+services:
+  rag_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rag_specialist_app
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount a host directory for persistent application data
+      - ./app_data/chroma_db_data:/app/chroma_db_data
+      - ./app_data/metadata:/app/persistent_metadata
+      # The application will create metadata.db inside /app/persistent_metadata/
+    env_file:
+      - .env
+    environment:
+      PYTHONUNBUFFERED: 1
+    restart: unless-stopped
