@@ -1,19 +1,34 @@
 #!/bin/sh
 
-# Exit immediately if a command exits with a non-zero status.
-set -e
+set -e # Exit immediately if a command exits with a non-zero status.
 
-# Ensure the directory for the SQLite database exists and is writable.
-DB_DIR="/app/persistent_metadata"
-DB_FILE="${DB_DIR}/metadata.db"
+# Define user and group IDs
+APP_UID=1000
+APP_GID=1000
+APP_USER=appuser
 
-# Create the directory if it doesn't exist.
-echo "Entrypoint: Checking if $DB_DIR is writable by $(whoami)..."
-if [ ! -w "$DB_DIR" ]; then
-    echo "Error: $DB_DIR is not writable. Attempting to chown..."
-fi
+# Define paths for persistent data
+CHROMA_DATA_DIR="/app/chroma_db_data"
+METADATA_DIR="/app/persistent_metadata"
+UPLOADS_DIR="/app/data/uploads"
 
-echo "Entrypoint: Starting application with command: $@"
+# Ensure directories exist
+mkdir -p "$CHROMA_DATA_DIR"
+mkdir -p "$METADATA_DIR"
+mkdir -p "$UPLOADS_DIR"
 
-# Execute the command passed as arguments to the entrypoint (e.g., uvicorn)
-exec "$@"
+echo "Entrypoint: Current user is $(whoami)"
+echo "Entrypoint: Ensuring ownership of data directories for $APP_USER ($APP_UID:$APP_GID)..."
+
+# Change ownership of the data directories to appuser.
+chown -R "${APP_UID}:${APP_GID}" "$CHROMA_DATA_DIR"
+chown -R "${APP_UID}:${APP_GID}" "$METADATA_DIR"
+chown -R "${APP_UID}:${APP_GID}" "$UPLOADS_DIR"
+
+echo "Entrypoint: Ownership set. Directories content:"
+ls -ld "$CHROMA_DATA_DIR"
+ls -ld "$METADATA_DIR"
+ls -ld "$UPLOADS_DIR"
+
+echo "Entrypoint: Dropping privileges and executing command as $APP_USER: $@"
+exec gosu "$APP_USER" "$@"
